@@ -38,6 +38,9 @@ type ParseInfo struct {
 
 	// Config extracted from template.
 	Config ParseConfig
+
+	// Engine to store the template engine type
+	Engine string
 }
 
 func (info ParseInfo) IsZero() bool {
@@ -54,4 +57,5 @@ var DefaultParseConfig = ParseConfig{
 
 var DefaultParseInfo = ParseInfo{
 	Config: DefaultParseConfig,
+	Engine: "Go Templates",
 }

@@ -79,10 +79,12 @@ type TemplateHandler interface {
 	GetIdentity(name string) (identity.Identity, bool)
 }
 
+// TemplateLookup interface
 type TemplateLookup interface {
 	Lookup(name string) (Template, bool)
 }
 
+// TemplateLookupVariant interface
 type TemplateLookupVariant interface {
 	// TODO(bep) this currently only works for shortcodes.
 	// We may unify and expand this variant pattern to the
@@ -97,10 +99,17 @@ type TemplateLookupVariant interface {
 	LookupVariants(name string) []Template
 }
 
-// Template is the common interface between text/template and html/template.
+// TemplateEngine interface to abstract different templating engines
+type TemplateEngine interface {
+	Parse(name, tpl string) (Template, error)
+	Execute(t Template, wr io.Writer, data any) error
+}
+
+// Template interface embedding TemplateEngine
 type Template interface {
 	Name() string
 	Prepare() (*texttemplate.Template, error)
+	TemplateEngine
 }
 
 // AddIdentity checks if t is an identity.Identity and returns it if so.
@@ -251,4 +260,12 @@ type DeferredExecution struct {
 
 	Executed bool
 	Result   string
+}
+
+// TemplateEngineRegistry to store registered template engines
+var TemplateEngineRegistry = make(map[string]TemplateEngine)
+
+// RegisterTemplateEngine to register a new template engine
+func RegisterTemplateEngine(name string, engine TemplateEngine) {
+	TemplateEngineRegistry[name] = engine
 }
