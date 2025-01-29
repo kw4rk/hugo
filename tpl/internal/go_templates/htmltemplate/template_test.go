@@ -216,3 +216,9 @@ func (c *testCase) mustExecute(t *Template, val any, want string) {
 		c.t.Fatalf("template output:\n%s\nwant:\n%s", buf.String(), want)
 	}
 }
+
+func TestTemplateEngineImplementation(t *testing.T) {
+	c := newTestCase(t)
+	c.mustParse(c.root, `Hello, {{.}}!`)
+	c.mustExecute(c.root, "World", "Hello, World!")
+}

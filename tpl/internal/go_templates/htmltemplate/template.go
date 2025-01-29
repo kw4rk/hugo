@@ -529,3 +529,12 @@ func readFileFS(fsys fs.FS) func(string) (string, []byte, error) {
 		return
 	}
 }
+
+// Implement the TemplateEngine interface for Go Templates
+func (t *Template) Parse(name, tpl string) (tpl.Template, error) {
+	return t.New(name).Parse(tpl)
+}
+
+func (t *Template) Execute(tpl.Template, wr io.Writer, data any) error {
+	return t.Execute(wr, data)
+}

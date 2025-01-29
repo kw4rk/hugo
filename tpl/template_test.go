@@ -15,6 +15,9 @@ package tpl
 
 import (
 	"testing"
+	"bytes"
+	"io"
+	"strings"
 
 	qt "github.com/frankban/quicktest"
 )
@@ -66,4 +69,60 @@ More text here.</p>
 			t.Errorf("Test %d failed. Expected %q got %q", i, d.expected, output)
 		}
 	}
+}
+
+func TestTemplateEngineInterface(t *testing.T) {
+	c := qt.New(t)
+
+	// Mock TemplateEngine implementation
+	type MockTemplateEngine struct{}
+
+	func (m *MockTemplateEngine) Parse(name, tpl string) (Template, error) {
+		return &MockTemplate{name: name, tpl: tpl}, nil
+	}
+
+	func (m *MockTemplateEngine) Execute(t Template, wr io.Writer, data any) error {
+		_, err := wr.Write([]byte(t.(*MockTemplate).tpl))
+		return err
+	}
+
+	type MockTemplate struct {
+		name string
+		tpl  string
+	}
+
+	func (m *MockTemplate) Name() string {
+		return m.name
+	}
+
+	func (m *MockTemplate) Prepare() (*texttemplate.Template, error) {
+		return nil, nil
+	}
+
+	func (m *MockTemplate) Parse(name, tpl string) (Template, error) {
+		return &MockTemplate{name: name, tpl: tpl}, nil
+	}
+
+	func (m *MockTemplate) Execute(t Template, wr io.Writer, data any) error {
+		_, err := wr.Write([]byte(t.(*MockTemplate).tpl))
+		return err
+	}
+
+	// Register the mock template engine
+	RegisterTemplateEngine("mock", &MockTemplateEngine{})
+
+	// Verify the registered template engine
+	engine, exists := TemplateEngineRegistry["mock"]
+	c.Assert(exists, qt.Equals, true)
+	c.Assert(engine, qt.Not(qt.IsNil))
+
+	// Test parsing and executing a template using the mock template engine
+	tpl, err := engine.Parse("test", "Hello, World!")
+	c.Assert(err, qt.IsNil)
+	c.Assert(tpl.Name(), qt.Equals, "test")
+
+	var buf bytes.Buffer
+	err = engine.Execute(tpl, &buf, nil)
+	c.Assert(err, qt.IsNil)
+	c.Assert(buf.String(), qt.Equals, "Hello, World!")
 }
